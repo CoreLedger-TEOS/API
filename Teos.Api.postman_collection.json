@@ -2738,7 +2738,7 @@
 							"response": []
 						},
 						{
-							"name": "Search ByIssuerAndName",
+							"name": "Search ByIssuerAndName [Obsolete]",
 							"protocolProfileBehavior": {
 								"disableBodyPruning": true,
 								"disabledSystemHeaders": {
@@ -2784,7 +2784,43 @@
 							"response": []
 						},
 						{
-							"name": "Search ByIssuer",
+							"name": "Search ByIssuerAndName",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true,
+								"disabledSystemHeaders": {
+									"content-type": true,
+									"user-agent": true,
+									"accept": true
+								}
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{baseUrl}}/assets/search(issuer='{{senderAddress}}',name='asset')",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets",
+										"search(issuer='{{senderAddress}}',name='asset')"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Search ByIssuer [Obsolete]",
 							"protocolProfileBehavior": {
 								"disableBodyPruning": true,
 								"disabledSystemHeaders": {
@@ -2824,6 +2860,80 @@
 							"response": []
 						},
 						{
+							"name": "Search ByIssuer",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true,
+								"disabledSystemHeaders": {
+									"content-type": true
+								}
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{baseUrl}}/assets/search(issuer='{{senderAddress}}')",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets",
+										"search(issuer='{{senderAddress}}')"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Search ByName [Obsolete]",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true,
+								"disabledSystemHeaders": {
+									"content-type": true
+								}
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{baseUrl}}/assets/search?name=not",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets",
+										"search"
+									],
+									"query": [
+										{
+											"key": "name",
+											"value": "not"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
 							"name": "Search ByName",
 							"protocolProfileBehavior": {
 								"disableBodyPruning": true,
@@ -2845,19 +2955,13 @@
 									"raw": ""
 								},
 								"url": {
-									"raw": "{{baseUrl}}/assets/search?name=notar",
+									"raw": "{{baseUrl}}/assets/search(name='not')",
 									"host": [
 										"{{baseUrl}}"
 									],
 									"path": [
 										"assets",
-										"search"
-									],
-									"query": [
-										{
-											"key": "name",
-											"value": "notar"
-										}
+										"search(name='not')"
 									]
 								}
 							},
@@ -4923,23 +5027,13 @@
 									"raw": ""
 								},
 								"url": {
-									"raw": "{{baseUrl}}/assets/search?issuer={{senderAddress}}&name=asset",
+									"raw": "{{baseUrl}}/assets/search(issuer='{{senderAddress}}',name='asset')",
 									"host": [
 										"{{baseUrl}}"
 									],
 									"path": [
 										"assets",
-										"search"
-									],
-									"query": [
-										{
-											"key": "issuer",
-											"value": "{{senderAddress}}"
-										},
-										{
-											"key": "name",
-											"value": "asset"
-										}
+										"search(issuer='{{senderAddress}}',name='asset')"
 									]
 								}
 							},
@@ -4967,19 +5061,13 @@
 									"raw": ""
 								},
 								"url": {
-									"raw": "{{baseUrl}}/assets/search?issuer={{senderAddress}}",
+									"raw": "{{baseUrl}}/assets/search(issuer='{{senderAddress}}')",
 									"host": [
 										"{{baseUrl}}"
 									],
 									"path": [
 										"assets",
-										"search"
-									],
-									"query": [
-										{
-											"key": "issuer",
-											"value": "{{senderAddress}}"
-										}
+										"search(issuer='{{senderAddress}}')"
 									]
 								}
 							},
@@ -5007,19 +5095,13 @@
 									"raw": ""
 								},
 								"url": {
-									"raw": "{{baseUrl}}/assets/search?name=notar",
+									"raw": "{{baseUrl}}/assets/search(name='not')",
 									"host": [
 										"{{baseUrl}}"
 									],
 									"path": [
 										"assets",
-										"search"
-									],
-									"query": [
-										{
-											"key": "name",
-											"value": "notar"
-										}
+										"search(name='not')"
 									]
 								}
 							},
@@ -6825,6 +6907,41 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "health",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{teos-url}}/health",
+					"host": [
+						"{{teos-url}}"
+					],
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "health details",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{teos-url}}/health/details",
+					"host": [
+						"{{teos-url}}"
+					],
+					"path": [
+						"health",
+						"details"
+					]
+				}
+			},
+			"response": []
 		}
 	],
 	"auth": {
@@ -6879,7 +6996,7 @@
 		},
 		{
 			"key": "senderAddress",
-			"value": "0xe0450ce1e2ef73b15514ae6a003b90d0ebac8835"
+			"value": "{{env.senderAddress}}"
 		},
 		{
 			"key": "txConfirmationWaitSec",
@@ -6896,6 +7013,11 @@
 		{
 			"key": "uniqueAssetId2",
 			"value": "{{env.uniqueAssetId2}}"
+		},
+		{
+			"key": "teos-url",
+			"value": "{{env.baseUrl}}",
+			"type": "string"
 		}
 	]
 }
