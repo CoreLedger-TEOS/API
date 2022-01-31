@@ -6,597 +6,6 @@
 	},
 	"item": [
 		{
-			"name": "V0.1",
-			"item": [
-				{
-					"name": "Assets",
-					"item": [
-						{
-							"name": "Assets",
-							"event": [
-								{
-									"listen": "prerequest",
-									"script": {
-										"exec": [
-											""
-										],
-										"type": "text/javascript"
-									}
-								}
-							],
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "{{baseUrl}}/assets?$count=true",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"assets"
-									],
-									"query": [
-										{
-											"key": "$count",
-											"value": "true"
-										}
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Assets with select",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "{{baseUrl}}/assets?$count=true&$select=Id,Name,Data,FileName",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"assets"
-									],
-									"query": [
-										{
-											"key": "$count",
-											"value": "true"
-										},
-										{
-											"key": "$select",
-											"value": "Id,Name,Data,FileName"
-										}
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Asset",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"exec": [
-											"var jsonData = pm.response.json();\r",
-											"\r",
-											"pm.test(\"Successful POST request\", function () {\r",
-											"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
-											"});\r",
-											"\r",
-											"pm.test(\"Asset name is correct\", function () {\r",
-											"\r",
-											"    var reqData = JSON.parse(pm.request.body.raw);\r",
-											"    var name = reqData.name;\r",
-											"\r",
-											"    pm.expect(jsonData.Name).to.eql(name);\r",
-											"});\r",
-											"\r",
-											"var assetId = jsonData.id ? jsonData.id : jsonData.Id;\r",
-											"var txId = jsonData.transactionId ? jsonData.transactionId : jsonData.TransactionId;\r",
-											"\r",
-											"pm.collectionVariables.set(\"uniqueAssetId\", assetId);\r",
-											"pm.collectionVariables.set(\"assetTxId\", txId);"
-										],
-										"type": "text/javascript"
-									}
-								},
-								{
-									"listen": "prerequest",
-									"script": {
-										"exec": [
-											""
-										],
-										"type": "text/javascript"
-									}
-								}
-							],
-							"request": {
-								"method": "POST",
-								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": "{\r\n    \"author\": \"{{senderAddress}}\",\r\n    \"name\" : \"Hello world asset {{cur-timestamp}}\",\r\n    \"data\": \"Lorem ipsum\",\r\n    \"FileName\": \"Lorem.pdf\",\r\n    \"filetype\": \"PDF\",\r\n    \"Method\": \"Ipsum writing\",\r\n    \"hash\": \"266b44bef503802c57cac0xec0744c44d73ccca9c1266b44bef503802c57cac==\",\r\n    \"uri\": \"https://lorem.com/odata/ipsum\"\r\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "{{baseUrl}}/assets/",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"assets",
-										""
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Asset",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"exec": [
-											"console.log(pm.info.requestId);"
-										],
-										"type": "text/javascript"
-									}
-								},
-								{
-									"listen": "prerequest",
-									"script": {
-										"exec": [
-											"var txId = pm.collectionVariables.get(\"assetTxId\");\r",
-											"\r",
-											"if(txId)\r",
-											"{\r",
-											"    var baseUrl = pm.variables.replaceIn(\"{{baseUrl}}\");\r",
-											"\tvar authToken = pm.collectionVariables.get(\"authToken\");\r",
-											"\r",
-											"\tvar request = {\r",
-											"\t\turl: `${baseUrl}/transactions(${txId})`,\r",
-											"\t\theader: {\r",
-											"\t\t\t'authorization' : `bearer ${authToken}`\r",
-											"\t\t}\r",
-											"\t}\r",
-											"\r",
-											"\tfunction waitTxConfirmation() {\r",
-											"\t\tpm.sendRequest(request, (error, response) => {\r",
-											"\t\t\tif (error) {\r",
-											"\t\t\t\tconsole.log(error);\r",
-											"\t\t\t\texit = true;\r",
-											"\t\t\t} else {\r",
-											"\t\t\t\tvar resp = response.json();\r",
-											"\t\t\t\tstate = resp.State ? resp.State : resp.state;\r",
-											"\t\t\t\tif(state != \"Confirmed\")\r",
-											"\t\t\t\t{\r",
-											"\t\t\t\t\tconsole.log(\"Tx not Confirmed yet. Waiting\")\r",
-											"\t\t\t\t\tsetTimeout(waitTxConfirmation, 5000);\r",
-											"\t\t\t\t}\r",
-											"\t\t\t\telse{\r",
-											"\t\t\t\t\tconsole.log(\"Tx Confirmed, waiting for Backbone processing\")\r",
-											"\t\t\t\t\tsetTimeout(function(){\r",
-											"\t\t\t\t\t\tconsole.log(\"let's run the request\");\r",
-											"\t\t\t\t\t}, 10000);\r",
-											"\t\t\t\t}\r",
-											"\t\t\t}\r",
-											"\t\t});\r",
-											"\t}\r",
-											"\r",
-											"\twaitTxConfirmation();\r",
-											"}\r",
-											""
-										],
-										"type": "text/javascript"
-									}
-								}
-							],
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "{{baseUrl}}/assets('{{uniqueAssetId}}')",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"assets('{{uniqueAssetId}}')"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Asset(key)",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "{{baseUrl}}/assets('{{uniqueAssetId}}')",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"assets('{{uniqueAssetId}}')"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Asset/key",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "{{baseUrl}}/assets/{{uniqueAssetId}}",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"assets",
-										"{{uniqueAssetId}}"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "DocumentDbRecord",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "{{baseUrl}}/DocumentDbRecord?assetId={{uniqueAssetId}}",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"DocumentDbRecord"
-									],
-									"query": [
-										{
-											"key": "assetId",
-											"value": "{{uniqueAssetId}}"
-										}
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Search ByIssuerAndName",
-							"protocolProfileBehavior": {
-								"disabledSystemHeaders": {
-									"content-type": true,
-									"user-agent": true,
-									"accept": true
-								}
-							},
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\r\n    \"Issuer\":\"{{senderAddress}}\",\r\n    \"Name\":\"Not\"\r\n}"
-								},
-								"url": {
-									"raw": "{{baseUrl}}/search",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"search"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Search ByIssuer",
-							"protocolProfileBehavior": {
-								"disabledSystemHeaders": {
-									"content-type": true,
-									"user-agent": true,
-									"accept": true
-								}
-							},
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\r\n    \"Issuer\":\"{{senderAddress}}\"\r\n}"
-								},
-								"url": {
-									"raw": "{{baseUrl}}/search",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"search"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Search ByName",
-							"protocolProfileBehavior": {
-								"disabledSystemHeaders": {
-									"content-type": true,
-									"user-agent": true,
-									"accept": true
-								}
-							},
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\r\n    \"Issuer\":\"{{senderAddress}}\",\r\n    \"Name\":\"Not\"\r\n}"
-								},
-								"url": {
-									"raw": "{{baseUrl}}/search",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"search"
-									]
-								}
-							},
-							"response": []
-						}
-					]
-				},
-				{
-					"name": "Wallets",
-					"item": [
-						{
-							"name": "Wallets",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "api-version",
-										"value": "1.0",
-										"type": "text",
-										"disabled": true
-									}
-								],
-								"url": {
-									"raw": "{{baseUrl}}/wallets?$count=true",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"wallets"
-									],
-									"query": [
-										{
-											"key": "$count",
-											"value": "true"
-										}
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Wallets with select",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "api-version",
-										"value": "1.0",
-										"type": "text",
-										"disabled": true
-									}
-								],
-								"url": {
-									"raw": "{{baseUrl}}/wallets?$count=true&$select=Id,Name",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"wallets"
-									],
-									"query": [
-										{
-											"key": "$count",
-											"value": "true"
-										},
-										{
-											"key": "$select",
-											"value": "Id,Name"
-										}
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Wallet",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "{{baseUrl}}/wallets(f86a7328-3f36-4e08-7d26-08d8e207ce3b)",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"wallets(f86a7328-3f36-4e08-7d26-08d8e207ce3b)"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Init wallet",
-							"request": {
-								"method": "POST",
-								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": "{\r\n    \"UserId\": \"1afb5928-e78b-4328-a931-36ca5ff2499c\"\r\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "{{baseUrl}}/InitWalletRegistration",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"InitWalletRegistration"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Wallets",
-							"request": {
-								"method": "DELETE",
-								"header": [],
-								"url": {
-									"raw": "{{baseUrl}}/wallets(d4da9084-0581-4590-98f5-08d8ef7d29e5)",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"wallets(d4da9084-0581-4590-98f5-08d8ef7d29e5)"
-									]
-								}
-							},
-							"response": []
-						}
-					]
-				},
-				{
-					"name": "Transaction/key",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/transactions/48c5c548-2d25-4eea-19ac-08d96d5af559",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"transactions",
-								"48c5c548-2d25-4eea-19ac-08d96d5af559"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Transaction(key)",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/transactions(48c5c548-2d25-4eea-19ac-08d96d5af559)",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"transactions(48c5c548-2d25-4eea-19ac-08d96d5af559)"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Odata",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								""
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Metadata",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/$metadata",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"$metadata"
-							]
-						}
-					},
-					"response": []
-				}
-			],
-			"event": [
-				{
-					"listen": "prerequest",
-					"script": {
-						"type": "text/javascript",
-						"exec": [
-							"pm.collectionVariables.set(\"odata-version\", \"/v0.1\");",
-							"//pm.collectionVariables.set(\"odata-version\", \"\");"
-						]
-					}
-				},
-				{
-					"listen": "test",
-					"script": {
-						"type": "text/javascript",
-						"exec": [
-							""
-						]
-					}
-				}
-			]
-		},
-		{
 			"name": "V0.2",
 			"item": [
 				{
@@ -2035,7 +1444,7 @@
 															"\r",
 															"pm.test(\"Error detail message contains incorrect field name\", function () {\r",
 															"\tvar jsonData = pm.response.json();\r",
-															"  pm.expect(jsonData.details[0].message).to.include(\"'data'\")\r",
+															"  pm.expect(jsonData.Details[0].Message).to.include(\"'data'\")\r",
 															"});"
 														],
 														"type": "text/javascript"
@@ -2091,9 +1500,9 @@
 															"\tvar jsonData = pm.response.json();\r",
 															"\r",
 															"\tvar allTargets = [];\r",
-															"\tfor(detail of jsonData.details)\r",
+															"\tfor(detail of jsonData.Details)\r",
 															"\t{\r",
-															"\t\tallTargets.push(detail.target.toLowerCase());\r",
+															"\t\tallTargets.push(detail.Target.toLowerCase());\r",
 															"\t}\r",
 															"\r",
 															"\tvar requiredAssetFields = ['author', 'name', 'language', 'description', 'jurisdiction'];\t\r",
@@ -2157,13 +1566,13 @@
 															"\tvar jsonData = pm.response.json();\r",
 															"\r",
 															"    pm.test(\"3 errors are expected\", function () {\r",
-															"        pm.expect(jsonData.details.length).to.equal(3);\r",
+															"        pm.expect(jsonData.Details.length).to.equal(3);\r",
 															"    });\r",
 															"\r",
 															"\tvar allErrorCodes = [];\r",
-															"\tfor(detail of jsonData.details)\r",
+															"\tfor(detail of jsonData.Details)\r",
 															"\t{\r",
-															"\t\tallErrorCodes.push(detail.code);\r",
+															"\t\tallErrorCodes.push(detail.Code);\r",
 															"\t}\r",
 															"\r",
 															"\tvar expectedErrorCodes = ['2003', '2004', '2008'];\t\r",
@@ -4243,7 +3652,7 @@
 															"\r",
 															"pm.test(\"Error detail message contains incorrect field name\", function () {\r",
 															"\tvar jsonData = pm.response.json();\r",
-															"  pm.expect(jsonData.details[0].message).to.include(\"'data'\")\r",
+															"  pm.expect(jsonData.Details[0].Message).to.include(\"'data'\")\r",
 															"});"
 														],
 														"type": "text/javascript"
@@ -4299,9 +3708,9 @@
 															"\tvar jsonData = pm.response.json();\r",
 															"\r",
 															"\tvar allTargets = [];\r",
-															"\tfor(detail of jsonData.details)\r",
+															"\tfor(detail of jsonData.Details)\r",
 															"\t{\r",
-															"\t\tallTargets.push(detail.target.toLowerCase());\r",
+															"\t\tallTargets.push(detail.Target.toLowerCase());\r",
 															"\t}\r",
 															"\r",
 															"\tvar requiredAssetFields = ['author', 'name', 'language', 'description', 'jurisdiction'];\t\r",
@@ -4365,13 +3774,13 @@
 															"\tvar jsonData = pm.response.json();\r",
 															"\r",
 															"    pm.test(\"3 errors are expected\", function () {\r",
-															"        pm.expect(jsonData.details.length).to.equal(3);\r",
+															"        pm.expect(jsonData.Details.length).to.equal(3);\r",
 															"    });\r",
 															"\r",
 															"\tvar allErrorCodes = [];\r",
-															"\tfor(detail of jsonData.details)\r",
+															"\tfor(detail of jsonData.Details)\r",
 															"\t{\r",
-															"\t\tallErrorCodes.push(detail.code);\r",
+															"\t\tallErrorCodes.push(detail.Code);\r",
 															"\t}\r",
 															"\r",
 															"\tvar expectedErrorCodes = ['2003', '2004', '2008'];\t\r",
@@ -6383,7 +5792,7 @@
 															"\r",
 															"pm.test(\"Error detail message contains incorrect field name\", function () {\r",
 															"\tvar jsonData = pm.response.json();\r",
-															"  pm.expect(jsonData.details[0].message).to.include(\"'data'\")\r",
+															"  pm.expect(jsonData.Details[0].Message).to.include(\"'data'\")\r",
 															"});"
 														],
 														"type": "text/javascript"
@@ -6439,9 +5848,9 @@
 															"\tvar jsonData = pm.response.json();\r",
 															"\r",
 															"\tvar allTargets = [];\r",
-															"\tfor(detail of jsonData.details)\r",
+															"\tfor(detail of jsonData.Details)\r",
 															"\t{\r",
-															"\t\tallTargets.push(detail.target.toLowerCase());\r",
+															"\t\tallTargets.push(detail.Target.toLowerCase());\r",
 															"\t}\r",
 															"\r",
 															"\tvar requiredAssetFields = ['author', 'name', 'language', 'description', 'jurisdiction'];\t\r",
@@ -6505,13 +5914,13 @@
 															"\tvar jsonData = pm.response.json();\r",
 															"\r",
 															"    pm.test(\"3 errors are expected\", function () {\r",
-															"        pm.expect(jsonData.details.length).to.equal(3);\r",
+															"        pm.expect(jsonData.Details.length).to.equal(3);\r",
 															"    });\r",
 															"\r",
 															"\tvar allErrorCodes = [];\r",
-															"\tfor(detail of jsonData.details)\r",
+															"\tfor(detail of jsonData.Details)\r",
 															"\t{\r",
-															"\t\tallErrorCodes.push(detail.code);\r",
+															"\t\tallErrorCodes.push(detail.Code);\r",
 															"\t}\r",
 															"\r",
 															"\tvar expectedErrorCodes = ['2003', '2004', '2008'];\t\r",
@@ -6845,6 +6254,92 @@
 											"key": "$count",
 											"value": "true"
 										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "SparkOperations",
+					"item": [
+						{
+							"name": "search by addresses 'received'",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"Addresses\" : [\r\n        \"0x943d7c1b12d7241598f1bf3fcc5d27a8ad2cc096\",\r\n        \"0xbe310f7d8ab4f2decfffa2a5a18d71b4d68b4f95\"\r\n    ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/sparkoperations/search",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"sparkoperations",
+										"search"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "search by addresses 'sent' sparks of a specific asset",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"Addresses\" : [\r\n        \"0x943d7c1b12d7241598f1bf3fcc5d27a8ad2cc096\",\r\n        \"0xbe310f7d8ab4f2decfffa2a5a18d71b4d68b4f95\",\r\n        \"0xfa967924a46b687b27f9cb11dd6f7386f3b9a4ec\"\r\n    ],\r\n    \"UniqueAssetId\": \"0x237c8a00fee9024072cb0001\",\r\n    \"Direction\":\"sent\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/sparkoperations/search",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"sparkoperations",
+										"search"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "search by addresses, all('sent' and 'received') with pagesize",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"Addresses\" : [\r\n        \"0x943d7c1b12d7241598f1bf3fcc5d27a8ad2cc096\",\r\n        \"0xbe310f7d8ab4f2decfffa2a5a18d71b4d68b4f95\",\r\n        \"0xfa967924a46b687b27f9cb11dd6f7386f3b9a4ec\"\r\n    ],\r\n    \"PageNumber\" : 1,\r\n    \"PageSize\" : 10,\r\n    \"Direction\":\"all\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/sparkoperations/search",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"sparkoperations",
+										"search"
 									]
 								}
 							},
