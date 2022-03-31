@@ -4074,6 +4074,2399 @@
 								"method": "GET",
 								"header": [],
 								"url": {
+									"raw": "{{baseUrl}}/assets?$count=true&$filter=Id eq '{{uniqueAssetId}}' or Id eq '{{uniqueAssetId2}}'&$select=Id,Name,Description,Jurisdiction,Author",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets"
+									],
+									"query": [
+										{
+											"key": "$count",
+											"value": "true"
+										},
+										{
+											"key": "$filter",
+											"value": "Id eq '{{uniqueAssetId}}' or Id eq '{{uniqueAssetId2}}'"
+										},
+										{
+											"key": "$select",
+											"value": "Id,Name,Description,Jurisdiction,Author"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Assets with $select and $filter (in)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/assets?$count=true&$filter=Id in ('{{uniqueAssetId}}', '{{uniqueAssetId2}}')&$select=Id,Name,Description,Jurisdiction,Author",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets"
+									],
+									"query": [
+										{
+											"key": "$count",
+											"value": "true"
+										},
+										{
+											"key": "$filter",
+											"value": "Id in ('{{uniqueAssetId}}', '{{uniqueAssetId2}}')"
+										},
+										{
+											"key": "$select",
+											"value": "Id,Name,Description,Jurisdiction,Author"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Asset",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = pm.response.json();\r",
+											"\r",
+											"pm.test(\"Successful POST request\", function () {\r",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Asset name is correct\", function () {\r",
+											"\r",
+											"    var reqData = JSON.parse(pm.request.body.raw);\r",
+											"    var name = reqData.name;\r",
+											"\r",
+											"    pm.expect(jsonData.name).to.eql(name);\r",
+											"});\r",
+											"\r",
+											"var assetId = jsonData.id ? jsonData.id : jsonData.Id;\r",
+											"var txId = jsonData.transactionId ? jsonData.transactionId : jsonData.TransactionId;\r",
+											"\r",
+											"pm.collectionVariables.set(\"uniqueAssetId\", assetId);\r",
+											"pm.collectionVariables.set(\"assetTxId\", txId);"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"Author\": \"{{senderAddress}}\",\r\n    \"Name\": \"Hello asset document {{cur-timestamp}}\",\r\n    \"Description\": \"This is a blockchain record {{cur-timestamp}}\",\r\n    \"Language\": \"en\",\r\n    \"Jurisdiction\": \"EARTH\",\r\n    \"CustomDefinitionItems\": [\r\n        {\r\n            \"Key\": \"mydata\",\r\n            \"Type\": \"TEXT\",\r\n            \"Value\": \"My Private documentation\",\r\n            \"Name\": \"My Data\",\r\n            \"SectionsPath\": \"[mydocumentation]\",\r\n            \"SectionsPathNames\": \"[MyDocumentation]\"\r\n        },\r\n        {\r\n            \"Key\": \"method\",\r\n            \"Type\": \"STRING\",\r\n            \"Value\": \"Hand writing\",\r\n            \"Name\": \"Method\",\r\n            \"SectionsPath\": \"[documentation][singlefile]\",\r\n            \"SectionsPathNames\": \"[Documentation][single file]\"\r\n        }\r\n    ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/assets/",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Asset",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"console.log(pm.info.requestId);"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"var txId = pm.collectionVariables.get(\"assetTxId\");\r",
+											"\r",
+											"if(txId)\r",
+											"{\r",
+											"    var baseUrl = pm.variables.replaceIn(\"{{baseUrl}}\");\r",
+											"\tvar authToken = pm.collectionVariables.get(\"authToken\");\r",
+											"\r",
+											"\tvar request = {\r",
+											"\t\turl: `${baseUrl}/transactions(${txId})`,\r",
+											"\t\theader: {\r",
+											"\t\t\t'authorization' : `bearer ${authToken}`\r",
+											"\t\t}\r",
+											"\t}\r",
+											"\r",
+											"\tfunction waitTxConfirmation() {\r",
+											"\t\tpm.sendRequest(request, (error, response) => {\r",
+											"\t\t\tif (error) {\r",
+											"\t\t\t\tconsole.log(error);\r",
+											"\t\t\t\texit = true;\r",
+											"\t\t\t} else {\r",
+											"\t\t\t\tvar resp = response.json();\r",
+											"\t\t\t\tstate = resp.State ? resp.State : resp.state;\r",
+											"\t\t\t\tif(state != \"Confirmed\")\r",
+											"\t\t\t\t{\r",
+											"\t\t\t\t\tconsole.log(\"Tx not Confirmed yet. Waiting\")\r",
+											"\t\t\t\t\tsetTimeout(waitTxConfirmation, 5000);\r",
+											"\t\t\t\t}\r",
+											"\t\t\t\telse{\r",
+											"\t\t\t\t\tconsole.log(\"Tx Confirmed, waiting for Backbone processing\")\r",
+											"\t\t\t\t\tsetTimeout(function(){\r",
+											"\t\t\t\t\t\tconsole.log(\"let's run the request\");\r",
+											"\t\t\t\t\t}, 10000);\r",
+											"\t\t\t\t}\r",
+											"\t\t\t}\r",
+											"\t\t});\r",
+											"\t}\r",
+											"\r",
+											"\twaitTxConfirmation();\r",
+											"}\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/assets('{{uniqueAssetId}}')",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets('{{uniqueAssetId}}')"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Asset(key)/LinkedAssets",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"console.log(pm.info.requestId);"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"var txId = pm.collectionVariables.get(\"assetTxId\");\r",
+											"\r",
+											"if(txId)\r",
+											"{\r",
+											"    var baseUrl = pm.variables.replaceIn(\"{{baseUrl}}\");\r",
+											"\tvar authToken = pm.collectionVariables.get(\"authToken\");\r",
+											"\r",
+											"\tvar request = {\r",
+											"\t\turl: `${baseUrl}/transactions(${txId})`,\r",
+											"\t\theader: {\r",
+											"\t\t\t'authorization' : `bearer ${authToken}`\r",
+											"\t\t}\r",
+											"\t}\r",
+											"\r",
+											"\tfunction waitTxConfirmation() {\r",
+											"\t\tpm.sendRequest(request, (error, response) => {\r",
+											"\t\t\tif (error) {\r",
+											"\t\t\t\tconsole.log(error);\r",
+											"\t\t\t\texit = true;\r",
+											"\t\t\t} else {\r",
+											"\t\t\t\tvar resp = response.json();\r",
+											"\t\t\t\tstate = resp.State ? resp.State : resp.state;\r",
+											"\t\t\t\tif(state != \"Confirmed\")\r",
+											"\t\t\t\t{\r",
+											"\t\t\t\t\tconsole.log(\"Tx not Confirmed yet. Waiting\")\r",
+											"\t\t\t\t\tsetTimeout(waitTxConfirmation, 5000);\r",
+											"\t\t\t\t}\r",
+											"\t\t\t\telse{\r",
+											"\t\t\t\t\tconsole.log(\"Tx Confirmed, waiting for Backbone processing\")\r",
+											"\t\t\t\t\tsetTimeout(function(){\r",
+											"\t\t\t\t\t\tconsole.log(\"let's run the request\");\r",
+											"\t\t\t\t\t}, 10000);\r",
+											"\t\t\t\t}\r",
+											"\t\t\t}\r",
+											"\t\t});\r",
+											"\t}\r",
+											"\r",
+											"\twaitTxConfirmation();\r",
+											"}\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/assets('{{uniqueAssetId}}')/GetLinkedFromAssetIds",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets('{{uniqueAssetId}}')",
+										"GetLinkedFromAssetIds"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Asset(key)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/assets('{{uniqueAssetId}}')",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets('{{uniqueAssetId}}')"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Asset/key",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/assets/{{uniqueAssetId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets",
+										"{{uniqueAssetId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Asset/key/DocumentDbRecord",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/assets/{{uniqueAssetId}}/DocumentDbRecord",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets",
+										"{{uniqueAssetId}}",
+										"DocumentDbRecord"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Asset(key)/DocumentDbRecord",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/assets('{{uniqueAssetId}}')/DocumentDbRecord",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets('{{uniqueAssetId}}')",
+										"DocumentDbRecord"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Search ByIssuerAndName",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true,
+								"disabledSystemHeaders": {
+									"content-type": true,
+									"user-agent": true,
+									"accept": true
+								}
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{baseUrl}}/assets/search(issuer='{{senderAddress}}',name='asset')",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets",
+										"search(issuer='{{senderAddress}}',name='asset')"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Search ByIssuer",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true,
+								"disabledSystemHeaders": {
+									"content-type": true
+								}
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{baseUrl}}/assets/search(issuer='{{senderAddress}}')",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets",
+										"search(issuer='{{senderAddress}}')"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Search ByName",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true,
+								"disabledSystemHeaders": {
+									"content-type": true
+								}
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{baseUrl}}/assets/search(name='not')",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets",
+										"search(name='not')"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Asset(key)/GetLinkedFromAssetIds",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/assets('{{uniqueAssetId}}')/GetLinkedFromAssetIds",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets('{{uniqueAssetId}}')",
+										"GetLinkedFromAssetIds"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Asset(key)?$select=AssetLinkIds",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/assets('{{uniqueAssetId}}')?$select=AssetLinkIds",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets('{{uniqueAssetId}}')"
+									],
+									"query": [
+										{
+											"key": "$select",
+											"value": "AssetLinkIds"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Assets/key/CreateUnits",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"amount\":\"1000\",\r\n    \"type\": \"sparks\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/assets/{{uniqueAssetId}}/CreateUnits",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets",
+										"{{uniqueAssetId}}",
+										"CreateUnits"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Assets(key)/CreateUnits",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"amount\":\"1000\",\r\n    \"type\": \"sparks\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/assets('{{uniqueAssetId}}')/createunits",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets('{{uniqueAssetId}}')",
+										"createunits"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Assets/key/DestroyUnits",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"amount\":\"251\",\r\n    \"type\": \"sparks\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/assets/{{uniqueAssetId}}/DestroyUnits",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets",
+										"{{uniqueAssetId}}",
+										"DestroyUnits"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Assets(key)/DestroyUnits",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"amount\":\"251\",\r\n    \"type\": \"sparks\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/assets('{{uniqueAssetId}}')/DestroyUnits",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets('{{uniqueAssetId}}')",
+										"DestroyUnits"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Assets/key/TransferUnits",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"amount\":\"100\",\r\n    \"type\": \"sparks\",\r\n    \"senderAddress\" : \"{{senderAddress}}\",\r\n    \"targetAddress\" : \"0xe0450ce1e2ef73b15514ae6a003b90d0ebac8836\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/assets/{{uniqueAssetId}}/TransferUnits",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets",
+										"{{uniqueAssetId}}",
+										"TransferUnits"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Assets(key)/TransferUnits",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"amount\":\"100\",\r\n    \"type\": \"sparks\",\r\n    \"senderAddress\" : \"{{senderAddress}}\",\r\n    \"targetAddress\" : \"0xe0450ce1e2ef73b15514ae6a003b90d0ebac8836\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/assets('{{uniqueAssetId}}')/TransferUnits",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets('{{uniqueAssetId}}')",
+										"TransferUnits"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Assets/key/LinkAsset",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"targetAssetIds\": [\r\n        \"0x3DE248A51D576D89EBCD0005\",\r\n        \"62D3B0A37697D23DC65B0005\"\r\n    ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/assets/{{uniqueAssetId}}/linkassets",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets",
+										"{{uniqueAssetId}}",
+										"linkassets"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Assets(key)/LinkAsset",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"targetAssetIds\": [\r\n        \"0x3DE248A51D576D89EBCD0005\",\r\n        \"62D3B0A37697D23DC65B0005\"\r\n    ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/assets('{{uniqueAssetId}}')/linkassets",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets('{{uniqueAssetId}}')",
+										"linkassets"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Assets/key/UninkAssets",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"targetAssetIds\": [\r\n        \"0x3DE248A51D576D89EBCD0005\",\r\n        \"62D3B0A37697D23DC65B0005\"\r\n    ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/assets/{{uniqueAssetId}}/unlinkassets",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets",
+										"{{uniqueAssetId}}",
+										"unlinkassets"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Assets(key)/UninkAsset",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"targetAssetIds\": [\r\n        \"0x3DE248A51D576D89EBCD0005\",\r\n        \"62D3B0A37697D23DC65B0005\"\r\n    ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/assets('{{uniqueAssetId}}')/unlinkassets",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets('{{uniqueAssetId}}')",
+										"unlinkassets"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Assets with $select and $filter (eq)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/assets?$count=true&$filter=Id eq '{{uniqueAssetId}}' or Id eq '{{uniqueAssetId2}}'&$select=Id,Name,Description,Jurisdiction,Author",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets"
+									],
+									"query": [
+										{
+											"key": "$count",
+											"value": "true"
+										},
+										{
+											"key": "$filter",
+											"value": "Id eq '{{uniqueAssetId}}' or Id eq '{{uniqueAssetId2}}'"
+										},
+										{
+											"key": "$select",
+											"value": "Id,Name,Description,Jurisdiction,Author"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Wallets",
+					"item": [
+						{
+							"name": "Wallets",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/wallets",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"wallets"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Balances",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/balances?$count=true",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"balances"
+									],
+									"query": [
+										{
+											"key": "$count",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Wallet",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/wallets(f86a7328-3f36-4e08-7d26-08d8e207ce3b)",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"wallets(f86a7328-3f36-4e08-7d26-08d8e207ce3b)"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Init wallet",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"UserId\": \"1afb5928-e78b-4328-a931-36ca5ff2499c\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/wallets/InitWalletRegistration",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"wallets",
+										"InitWalletRegistration"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Wallets",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/wallets(c8205dc1-e02b-4c86-98f4-08d8ef7d29e5)",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"wallets(c8205dc1-e02b-4c86-98f4-08d8ef7d29e5)"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Unrestricted single balance",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/balances(Address='0xc873ba6a2b45f7b2cd733c3983bd53ec6e2a05df',UniqueAssetId='7d30002')",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"balances(Address='0xc873ba6a2b45f7b2cd733c3983bd53ec6e2a05df',UniqueAssetId='7d30002')"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Scenarios",
+					"item": [
+						{
+							"name": "Positive",
+							"item": [
+								{
+									"name": "Asset operations",
+									"item": [
+										{
+											"name": "Create an asset",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"var respJsonData = pm.response.json();\r",
+															"\r",
+															"pm.test(\"Status code is 201\", function () {\r",
+															"    pm.response.to.have.status(201);\r",
+															"});\r",
+															"\r",
+															"pm.test(\"Asset name is correct\", function () {\r",
+															"\r",
+															"    var reqData = JSON.parse(pm.request.body.raw);\r",
+															"    var name = reqData.name;\r",
+															"\r",
+															"    pm.expect(respJsonData.Name).to.eql(name);\r",
+															"});\r",
+															"\r",
+															"pm.collectionVariables.set(\"uniqueAssetId\", respJsonData.Id);\r",
+															"\r",
+															"pm.collectionVariables.set(\"assetTxId\", respJsonData.TransactionId);\r",
+															"\r",
+															"var txId = pm.collectionVariables.get(\"assetTxId\");\r",
+															"console.log(\"txId\",txId);\r",
+															"if(txId)\r",
+															"{\r",
+															"\tvar baseUrl = pm.variables.replaceIn(\"{{baseUrl}}\");\r",
+															"\tvar authToken = pm.collectionVariables.get(\"authToken\");\r",
+															"\r",
+															"\tvar request = {\r",
+															"\t\turl: `${baseUrl}/transactions(${txId})`,\r",
+															"\t\theader: {\r",
+															"\t\t\t'authorization' : `bearer ${authToken}`\r",
+															"\t\t}\r",
+															"\t}\r",
+															"\r",
+															"\tfunction waitTxConfirmation() {\r",
+															"\t\tpm.sendRequest(request, (error, response) => {\r",
+															"\t\t\tif (error) {\r",
+															"\t\t\t\tconsole.log(error);\r",
+															"\t\t\t\texit = true;\r",
+															"\t\t\t} else {\r",
+															"\t\t\t\tvar resp = response.json();\r",
+															"\t\t\t\tstate = resp.State;\r",
+															"\t\t\t\tif(state != \"Confirmed\")\r",
+															"\t\t\t\t{\r",
+															"\t\t\t\t\tconsole.log(\"Tx not Confirmed yet. Waiting\")\r",
+															"\t\t\t\t\tsetTimeout(waitTxConfirmation, 5000);\r",
+															"\t\t\t\t}\r",
+															"\t\t\t\telse{\r",
+															"\t\t\t\t\tconsole.log(\"Tx Confirmed, waiting for Backbone processing\")\r",
+															"\t\t\t\t\tsetTimeout(function(){\r",
+															"\t\t\t\t\t\tconsole.log(\"let's run the request\");\r",
+															"\t\t\t\t\t}, 20000);\r",
+															"\t\t\t\t}\r",
+															"\t\t\t}\r",
+															"\t\t});\r",
+															"\t}\r",
+															"\r",
+															"\twaitTxConfirmation();\r",
+															"}\r",
+															""
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															""
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"method": "POST",
+												"header": [],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n    \"Author\": \"{{senderAddress}}\",\r\n    \"name\" : \"Hello world asset {{cur-timestamp}}\",\r\n    \"Description\": \"This is a blockchain record {{cur-timestamp}}\",\r\n    \"Language\": \"en\",\r\n    \"Jurisdiction\": \"EARTH\",\r\n    \"CustomDefinitionItems\": [\r\n        {\r\n            \"Key\": \"mydata\",\r\n            \"Type\": \"TEXT\",\r\n            \"Value\": \"My Private documentation\",\r\n            \"Name\": \"My Data\",\r\n            \"SectionsPath\": \"[mydocumentation]\",\r\n            \"SectionsPathNames\": \"[MyDocumentation]\"\r\n        },\r\n        {\r\n            \"Key\": \"method\",\r\n            \"Type\": \"STRING\",\r\n            \"Value\": \"Hand writing\",\r\n            \"Name\": \"Method\",\r\n            \"SectionsPath\": \"[documentation][singlefile]\",\r\n            \"SectionsPathNames\": \"[Documentation][single file]\"\r\n        }\r\n    ]\r\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrl}}/assets/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"assets",
+														""
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "Asset, expand CustomDefinitionItems",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Status code is 200\", function () {\r",
+															"    pm.response.to.have.status(200);\r",
+															"});"
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															""
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{baseUrl}}/assets('{{uniqueAssetId}}')?$expand=CustomDefinitionItems",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"assets('{{uniqueAssetId}}')"
+													],
+													"query": [
+														{
+															"key": "$expand",
+															"value": "CustomDefinitionItems"
+														}
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "Create 100 sparks",
+											"event": [
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															""
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"var jsonData = pm.response.json();\r",
+															"\r",
+															"pm.test(\"Status code is 202\", function () {\r",
+															"    pm.response.to.have.status(202);\r",
+															"});\r",
+															"\r",
+															"var txId = jsonData.Id;\r",
+															"\r",
+															"var baseUrl = pm.variables.replaceIn(\"{{baseUrl}}\");\r",
+															"var authToken = pm.collectionVariables.get(\"authToken\");\r",
+															"\r",
+															"var request = {\r",
+															"\turl: `${baseUrl}/transactions(${txId})`,\r",
+															"\theader: {\r",
+															"\t\t'authorization' : `bearer ${authToken}`\r",
+															"\t}\r",
+															"}\r",
+															"\r",
+															"function waitTxConfirmation() {\r",
+															"\tpm.sendRequest(request, (error, response) => {\r",
+															"\t\tif (error) {\r",
+															"\t\t\tconsole.log(error);\r",
+															"\t\t\texit = true;\r",
+															"\t\t} else {\r",
+															"\t\t\tvar resp = response.json();\r",
+															"\t\t\tstate = resp.State;\r",
+															"\t\t\tif(state != \"Confirmed\")\r",
+															"\t\t\t{\r",
+															"\t\t\t\tconsole.log(\"Tx not Confirmed yet. Waiting\")\r",
+															"\t\t\t\tsetTimeout(waitTxConfirmation, 5000);\r",
+															"\t\t\t}\r",
+															"\t\t\telse{\r",
+															"\t\t\t\tconsole.log(\"Tx Confirmed, waiting for Backbone processing\")\r",
+															"\t\t\t\tsetTimeout(function(){\r",
+															"\t\t\t\t\tconsole.log(\"let's run the request\");\r",
+															"\t\t\t\t}, 20000);\r",
+															"\t\t\t}\r",
+															"\t\t}\r",
+															"\t});\r",
+															"}\r",
+															"\r",
+															"waitTxConfirmation();"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"method": "POST",
+												"header": [],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n    \"amount\":\"100\",\r\n    \"type\": \"sparks\"\r\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrl}}/assets('{{uniqueAssetId}}')/createunits",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"assets('{{uniqueAssetId}}')",
+														"createunits"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "Balances - sparks created",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Status code is 200\", function () {\r",
+															"    pm.response.to.have.status(200);\r",
+															"});\r",
+															"\r",
+															"var respJsonData = pm.response.json();\r",
+															"\r",
+															"pm.test(\"Sparks are created\", function () {\r",
+															"    pm.expect(respJsonData.value.length, \"Balances\").to.equal(1);\r",
+															"    pm.expect(respJsonData.value[0].Amount, \"Current amount of sparks\").to.equal('100');\r",
+															"});"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{baseUrl}}/balances?$count=true&$filter=Address eq '{{senderAddress}}' and UniqueAssetId  eq '{{uniqueAssetId}}'",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"balances"
+													],
+													"query": [
+														{
+															"key": "$count",
+															"value": "true"
+														},
+														{
+															"key": "$filter",
+															"value": "Address eq '{{senderAddress}}' and UniqueAssetId  eq '{{uniqueAssetId}}'"
+														}
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "Destroy 50 sparks",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"var jsonData = pm.response.json();\r",
+															"\r",
+															"pm.test(\"Status code is 202\", function () {\r",
+															"    pm.response.to.have.status(202);\r",
+															"});\r",
+															"\r",
+															"var txId = jsonData.Id;\r",
+															"\r",
+															"var baseUrl = pm.variables.replaceIn(\"{{baseUrl}}\");\r",
+															"var authToken = pm.collectionVariables.get(\"authToken\");\r",
+															"\r",
+															"var request = {\r",
+															"\turl: `${baseUrl}/transactions(${txId})`,\r",
+															"\theader: {\r",
+															"\t\t'authorization' : `bearer ${authToken}`\r",
+															"\t}\r",
+															"}\r",
+															"\r",
+															"function waitTxConfirmation() {\r",
+															"\tpm.sendRequest(request, (error, response) => {\r",
+															"\t\tif (error) {\r",
+															"\t\t\tconsole.log(error);\r",
+															"\t\t\texit = true;\r",
+															"\t\t} else {\r",
+															"\t\t\tvar resp = response.json();\r",
+															"\t\t\tstate = resp.State;\r",
+															"\t\t\tif(state != \"Confirmed\")\r",
+															"\t\t\t{\r",
+															"\t\t\t\tconsole.log(\"Tx not Confirmed yet. Waiting\")\r",
+															"\t\t\t\tsetTimeout(waitTxConfirmation, 5000);\r",
+															"\t\t\t}\r",
+															"\t\t\telse{\r",
+															"\t\t\t\tconsole.log(\"Tx Confirmed, waiting for Backbone processing\")\r",
+															"\t\t\t\tsetTimeout(function(){\r",
+															"\t\t\t\t\tconsole.log(\"let's run the request\");\r",
+															"\t\t\t\t}, 20000);\r",
+															"\t\t\t}\r",
+															"\t\t}\r",
+															"\t});\r",
+															"}\r",
+															"\r",
+															"waitTxConfirmation();"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"method": "POST",
+												"header": [],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n    \"amount\":\"50\",\r\n    \"type\": \"sparks\"\r\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrl}}/assets('{{uniqueAssetId}}')/destroyunits",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"assets('{{uniqueAssetId}}')",
+														"destroyunits"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "Balances - sparks destroyed",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Status code is 200\", function () {\r",
+															"    pm.response.to.have.status(200);\r",
+															"});\r",
+															"\r",
+															"var respJsonData = pm.response.json();\r",
+															"\r",
+															"pm.test(\"Sparks are destroyed\", function () {\r",
+															"    pm.expect(respJsonData.value.length, \"Balances\").to.equal(1);\r",
+															"    pm.expect(respJsonData.value[0].Amount, \"Current amount of sparks\").to.equal('50');\r",
+															"});"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{baseUrl}}/balances?$count=true&$filter=Address eq '{{senderAddress}}' and UniqueAssetId  eq '{{uniqueAssetId}}'",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"balances"
+													],
+													"query": [
+														{
+															"key": "$count",
+															"value": "true"
+														},
+														{
+															"key": "$filter",
+															"value": "Address eq '{{senderAddress}}' and UniqueAssetId  eq '{{uniqueAssetId}}'"
+														}
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "Transfer 50 sparks",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"var jsonData = pm.response.json();\r",
+															"\r",
+															"pm.test(\"Status code is 202\", function () {\r",
+															"    pm.response.to.have.status(202);\r",
+															"});\r",
+															"\r",
+															"var txId = jsonData.Id;\r",
+															"\r",
+															"var baseUrl = pm.variables.replaceIn(\"{{baseUrl}}\");\r",
+															"var authToken = pm.collectionVariables.get(\"authToken\");\r",
+															"\r",
+															"var request = {\r",
+															"\turl: `${baseUrl}/transactions(${txId})`,\r",
+															"\theader: {\r",
+															"\t\t'authorization' : `bearer ${authToken}`\r",
+															"\t}\r",
+															"}\r",
+															"\r",
+															"function waitTxConfirmation() {\r",
+															"\tpm.sendRequest(request, (error, response) => {\r",
+															"\t\tif (error) {\r",
+															"\t\t\tconsole.log(error);\r",
+															"\t\t\texit = true;\r",
+															"\t\t} else {\r",
+															"\t\t\tvar resp = response.json();\r",
+															"\t\t\tstate = resp.State;\r",
+															"\t\t\tif(state != \"Confirmed\")\r",
+															"\t\t\t{\r",
+															"\t\t\t\tconsole.log(\"Tx not Confirmed yet. Waiting\")\r",
+															"\t\t\t\tsetTimeout(waitTxConfirmation, 5000);\r",
+															"\t\t\t}\r",
+															"\t\t\telse{\r",
+															"\t\t\t\tconsole.log(\"Tx Confirmed, waiting for Backbone processing\")\r",
+															"\t\t\t\tsetTimeout(function(){\r",
+															"\t\t\t\t\tconsole.log(\"let's run the request\");\r",
+															"\t\t\t\t}, 20000);\r",
+															"\t\t\t}\r",
+															"\t\t}\r",
+															"\t});\r",
+															"}\r",
+															"\r",
+															"waitTxConfirmation();"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"method": "POST",
+												"header": [],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n    \"amount\":\"50\",\r\n    \"type\": \"sparks\",\r\n    \"senderAddress\" : \"{{senderAddress}}\",\r\n    \"targetAddress\" : \"0xe0450ce1e2ef73b15514ae6a003b90d0ebac8836\"\r\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrl}}/assets('{{uniqueAssetId}}')/transferunits",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"assets('{{uniqueAssetId}}')",
+														"transferunits"
+													]
+												}
+											},
+											"response": []
+										}
+									],
+									"description": "The scenario checks, that the following operations successfully complete:\n- create asset (with confirmation)\n- get asset\n- issue tokens (with confirmation)\n- destroy tokens (with confirmation)\n- transfer tokens (with confirmation)"
+								}
+							],
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											""
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"Successful request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202]);",
+											"});"
+										]
+									}
+								}
+							]
+						},
+						{
+							"name": "Negative",
+							"item": [
+								{
+									"name": "Asset operations",
+									"item": [
+										{
+											"name": "Destroy tokens - not enough",
+											"item": [
+												{
+													"name": "Create an asset",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"var jsonData = pm.response.json();\r",
+																	"\r",
+																	"pm.test(\"Status code is 201\", function () {\r",
+																	"    pm.response.to.have.status(201);\r",
+																	"});\r",
+																	"\r",
+																	"pm.test(\"Asset name is correct\", function () {\r",
+																	"\r",
+																	"    var reqData = JSON.parse(pm.request.body.raw);\r",
+																	"    var name = reqData.name;\r",
+																	"\r",
+																	"    pm.expect(jsonData.name).to.eql(name);\r",
+																	"});\r",
+																	"\r",
+																	"pm.collectionVariables.set(\"uniqueAssetId\", jsonData.Id);\r",
+																	"pm.collectionVariables.set(\"assetTxId\", jsonData.TransactionId);\r",
+																	"\r",
+																	"var txId = pm.collectionVariables.get(\"assetTxId\");\r",
+																	"\r",
+																	"if(txId)\r",
+																	"{\r",
+																	"\tvar baseUrl = pm.variables.replaceIn(\"{{baseUrl}}\");\r",
+																	"\tvar authToken = pm.collectionVariables.get(\"authToken\");\r",
+																	"\r",
+																	"\tvar request = {\r",
+																	"\t\turl: `${baseUrl}/transactions(${txId})`,\r",
+																	"\t\theader: {\r",
+																	"\t\t\t'authorization' : `bearer ${authToken}`\r",
+																	"\t\t}\r",
+																	"\t}\r",
+																	"\r",
+																	"\tfunction waitTxConfirmation() {\r",
+																	"\t\tpm.sendRequest(request, (error, response) => {\r",
+																	"\t\t\tif (error) {\r",
+																	"\t\t\t\tconsole.log(error);\r",
+																	"\t\t\t\texit = true;\r",
+																	"\t\t\t} else {\r",
+																	"\t\t\t\tvar resp = response.json();\r",
+																	"\t\t\t\tstate = resp.State;\r",
+																	"\t\t\t\tif(state != \"Confirmed\")\r",
+																	"\t\t\t\t{\r",
+																	"\t\t\t\t\tconsole.log(\"Tx not Confirmed yet. Waiting\")\r",
+																	"\t\t\t\t\tsetTimeout(waitTxConfirmation, 5000);\r",
+																	"\t\t\t\t}\r",
+																	"\t\t\t\telse{\r",
+																	"\t\t\t\t\tconsole.log(\"Tx Confirmed, waiting for Backbone processing\")\r",
+																	"\t\t\t\t\tsetTimeout(function(){\r",
+																	"\t\t\t\t\t\tconsole.log(\"let's run the request\");\r",
+																	"\t\t\t\t\t}, 20000);\r",
+																	"\t\t\t\t}\r",
+																	"\t\t\t}\r",
+																	"\t\t});\r",
+																	"\t}\r",
+																	"\r",
+																	"\twaitTxConfirmation();\r",
+																	"}\r",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														},
+														{
+															"listen": "prerequest",
+															"script": {
+																"exec": [
+																	""
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "POST",
+														"header": [],
+														"body": {
+															"mode": "raw",
+															"raw": "{\r\n    \"Author\": \"{{senderAddress}}\",\r\n    \"Name\": \"Hello asset document {{cur-timestamp}}\",\r\n    \"Description\": \"This is a blockchain record {{cur-timestamp}}\",\r\n    \"Language\": \"en\",\r\n    \"Jurisdiction\": \"EARTH\"\r\n}",
+															"options": {
+																"raw": {
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/assets/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"assets",
+																""
+															]
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Destroy 50 sparks",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"var jsonData = pm.response.json();\r",
+																	"\r",
+																	"pm.test(\"Status code is 400\", function () {\r",
+																	"    pm.response.to.have.status(400);\r",
+																	"});"
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "POST",
+														"header": [],
+														"body": {
+															"mode": "raw",
+															"raw": "{\r\n    \"amount\":\"50\",\r\n    \"type\": \"sparks\"\r\n}",
+															"options": {
+																"raw": {
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/assets('{{uniqueAssetId}}')/destroyunits",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"assets('{{uniqueAssetId}}')",
+																"destroyunits"
+															]
+														}
+													},
+													"response": []
+												}
+											]
+										},
+										{
+											"name": "Create an asset - Non-existing field name - BadRequest",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Status code is 400\", function () {\r",
+															"    pm.response.to.have.status(400);\r",
+															"});\r",
+															"\r",
+															"pm.test(\"Error detail message contains incorrect field name\", function () {\r",
+															"\tvar jsonData = pm.response.json();\r",
+															"  pm.expect(jsonData.Details[0].Message).to.include(\"'data'\")\r",
+															"});"
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															""
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"method": "POST",
+												"header": [],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n    \"Author\": \"{{senderAddress}}\",\r\n    \"Name\": \"Hello asset document {{cur-timestamp}}\",\r\n    \"Description\": \"This is a blockchain record {{cur-timestamp}}\",\r\n    \"Language\": \"en\",\r\n    \"Jurisdiction\": \"EARTH\",\r\n    \"data\": \"Lorem ipsum\"\r\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrl}}/assets/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"assets",
+														""
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "Create an asset - Missing required fields - BadRequest",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Status code is 400\", function () {\r",
+															"    pm.response.to.have.status(400);\r",
+															"});\r",
+															"\r",
+															"pm.test(\"Error detail targets contain missing required field names\", function () {\r",
+															"\tvar jsonData = pm.response.json();\r",
+															"\r",
+															"\tvar allTargets = [];\r",
+															"\tfor(detail of jsonData.Details)\r",
+															"\t{\r",
+															"\t\tallTargets.push(detail.Target.toLowerCase());\r",
+															"\t}\r",
+															"\r",
+															"\tvar requiredAssetFields = ['author', 'name', 'language', 'description', 'jurisdiction'];\t\r",
+															"\r",
+															"\tfor(requiredField of requiredAssetFields)\r",
+															"\t{\r",
+															"\t\tpm.expect(allTargets).to.include(requiredField);\r",
+															"\t}\r",
+															"});"
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															""
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"method": "POST",
+												"header": [],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrl}}/assets/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"assets",
+														""
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "Create an asset - Incorrect values",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Status code is 400\", function () {\r",
+															"    pm.response.to.have.status(400);\r",
+															"});\r",
+															"\r",
+															"pm.test(\"Error detail contain invalid field values\", function () {\r",
+															"\tvar jsonData = pm.response.json();\r",
+															"\r",
+															"    pm.test(\"3 errors are expected\", function () {\r",
+															"        pm.expect(jsonData.Details.length).to.equal(3);\r",
+															"    });\r",
+															"\r",
+															"\tvar allErrorCodes = [];\r",
+															"\tfor(detail of jsonData.Details)\r",
+															"\t{\r",
+															"\t\tallErrorCodes.push(detail.Code);\r",
+															"\t}\r",
+															"\r",
+															"\tvar expectedErrorCodes = ['2003', '2004', '2008'];\t\r",
+															"\tfor(requiredErrorCode of expectedErrorCodes)\r",
+															"\t{\r",
+															"\t\tpm.expect(allErrorCodes).to.include(requiredErrorCode);\r",
+															"\t}\r",
+															"});\r",
+															""
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															""
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"method": "POST",
+												"header": [],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n    \"Author\": \"{{senderAddress}}\",\r\n    \"name\" : \"Hello world asset {{cur-timestamp}}\",\r\n    \"Description\": \"This is a blockchain record {{cur-timestamp}}\",\r\n    \"Language\": \"end\",\r\n    \"Jurisdiction\": \"EARTHS\",\r\n    \"CustomDefinitionItems\": [\r\n        {\r\n            \"Key\": \"mydata\",\r\n            \"Type\": \"TEXT\",\r\n            \"Value\": \"My Private documentation\",\r\n            \"Name\": \"My Data\",\r\n            \"SectionsPath\": \"[mydocumentation]\",\r\n            \"SectionsPathNames\": \"[MyDocumentation]\"\r\n        },\r\n        {\r\n            \"Key\": \"method\",\r\n            \"Type\": \"STRING\",\r\n            \"Value\": \"Hand writing\",\r\n            \"Name\": \"Method\",\r\n            \"SectionsPath\": \"[documentation]\",\r\n            \"SectionsPathNames\": \"[Documentation][single file]\"\r\n        }\r\n    ]\r\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrl}}/assets/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"assets",
+														""
+													]
+												}
+											},
+											"response": []
+										}
+									]
+								}
+							],
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											""
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											""
+										]
+									}
+								}
+							]
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Warps",
+					"item": [
+						{
+							"name": "Warp search",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n\t\"offeredAssetId\":\"827CB8534CFABA240CC90001\",\r\n\t\"offeredAmount\" :\"4\",\r\n\t\"desiredAssetId\":\"C271BF2BEC1796539AB20001\",\r\n\t\"desiredAmount\": \"0\",\r\n\t\"signerAddress\": \"0xe630ED37BAB4986233FA0cd4DD78aCe28f7eCBf5\",\r\n\t\"targetAddress\": \"0x542cbD0898438CC65dAfd7e7C5b5dadeE3E0f7E0\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/warps/search",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"warps",
+										"search"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Execute search",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n\t\"signerAddress\": \"0x6FE40b857447f7Ea488c3B0361BB0aEB08ACE5aC\",\r\n\t\"targetAddress\": \"0xf827e6cfe5Aa07aB0aF519eB69F6Ad33aD3Ee491\",\r\n\t\"inputAmount\": \"4\",\r\n\t\"supplyIds\" : [\r\n\t\t\"0x827CB8534CFABA240CC90001C271BF2BEC1796539AB2000168E4D1DC000007C7\"\r\n\t]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/warps/execute",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"warps",
+										"execute"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Transactions",
+					"item": [
+						{
+							"name": "Transaction",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/transactions(a619f85b-024c-4b6a-1360-08d9531bd45c)",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"transactions(a619f85b-024c-4b6a-1360-08d9531bd45c)"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Transactions by addresses",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/transactions?$filter=SignedBy in('0xa94f93dbfce5bb64603d245d4519e625c002fee5', '0xeb9c947cbae36895b513a32755c18ab4eb6cf762')&$count=true",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"transactions"
+									],
+									"query": [
+										{
+											"key": "$filter",
+											"value": "SignedBy in('0xa94f93dbfce5bb64603d245d4519e625c002fee5', '0xeb9c947cbae36895b513a32755c18ab4eb6cf762')"
+										},
+										{
+											"key": "$count",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Transactions by addresses and state",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/transactions?$filter=(SignedBy eq '0xa94f93dbfce5bb64603d245d4519e625c002fee5' or SignedBy eq '0xeb9c947cbae36895b513a32755c18ab4eb6cf762') and State eq null&$count=true",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"transactions"
+									],
+									"query": [
+										{
+											"key": "$filter",
+											"value": "(SignedBy eq '0xa94f93dbfce5bb64603d245d4519e625c002fee5' or SignedBy eq '0xeb9c947cbae36895b513a32755c18ab4eb6cf762') and State eq null"
+										},
+										{
+											"key": "$count",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "My Transactions by addresses",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/transactions/my?$filter=SignedBy in('0xa94f93dbfce5bb64603d245d4519e625c002fee5', '0xeb9c947cbae36895b513a32755c18ab4eb6cf762')&$count=true",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"transactions",
+										"my"
+									],
+									"query": [
+										{
+											"key": "$filter",
+											"value": "SignedBy in('0xa94f93dbfce5bb64603d245d4519e625c002fee5', '0xeb9c947cbae36895b513a32755c18ab4eb6cf762')"
+										},
+										{
+											"key": "$count",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "My Transactions by state",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/transactions/my?$filter=State ne 'Confirmed'&$count=true",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"transactions",
+										"my"
+									],
+									"query": [
+										{
+											"key": "$filter",
+											"value": "State ne 'Confirmed'"
+										},
+										{
+											"key": "$count",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "SparkOperations",
+					"item": [
+						{
+							"name": "search by addresses 'received'",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"Addresses\" : [\r\n        \"0x943d7c1b12d7241598f1bf3fcc5d27a8ad2cc096\",\r\n        \"0xbe310f7d8ab4f2decfffa2a5a18d71b4d68b4f95\"\r\n    ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/sparkoperations/search",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"sparkoperations",
+										"search"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "search by addresses 'sent' sparks of a specific asset",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"Addresses\" : [\r\n        \"0x943d7c1b12d7241598f1bf3fcc5d27a8ad2cc096\",\r\n        \"0xbe310f7d8ab4f2decfffa2a5a18d71b4d68b4f95\",\r\n        \"0xfa967924a46b687b27f9cb11dd6f7386f3b9a4ec\"\r\n    ],\r\n    \"UniqueAssetId\": \"0x237c8a00fee9024072cb0001\",\r\n    \"Direction\":\"sent\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/sparkoperations/search",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"sparkoperations",
+										"search"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "search by addresses, all('sent' and 'received') with pagesize",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"Addresses\" : [\r\n        \"0x943d7c1b12d7241598f1bf3fcc5d27a8ad2cc096\",\r\n        \"0xbe310f7d8ab4f2decfffa2a5a18d71b4d68b4f95\",\r\n        \"0xfa967924a46b687b27f9cb11dd6f7386f3b9a4ec\"\r\n    ],\r\n    \"PageNumber\" : 1,\r\n    \"PageSize\" : 10,\r\n    \"Direction\":\"all\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/sparkoperations/search",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"sparkoperations",
+										"search"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Metadata",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/$metadata",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"$metadata"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.collectionVariables.set(\"odata-version\", \"/v0.4\");"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "V0.5",
+			"item": [
+				{
+					"name": "Assets",
+					"item": [
+						{
+							"name": "Assets",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/assets?$count=true",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets"
+									],
+									"query": [
+										{
+											"key": "$count",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Assets with select",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/assets?$count=true&$select=Id,Name,Description,Jurisdiction",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"assets"
+									],
+									"query": [
+										{
+											"key": "$count",
+											"value": "true"
+										},
+										{
+											"key": "$select",
+											"value": "Id,Name,Description,Jurisdiction"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Assets with $select and $filter (eq)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
 									"raw": "{{baseUrl}}/assets?$count=true&$select=Id,Name,Description,Jurisdiction",
 									"host": [
 										"{{baseUrl}}"
@@ -6348,6 +8741,28 @@
 					]
 				},
 				{
+					"name": "Users",
+					"item": [
+						{
+							"name": "Delete User",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/users(2B785872-BC57-4207-AA0F-117D17D26927)",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"users(2B785872-BC57-4207-AA0F-117D17D26927)"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
 					"name": "Metadata",
 					"request": {
 						"method": "GET",
@@ -6371,7 +8786,7 @@
 					"script": {
 						"type": "text/javascript",
 						"exec": [
-							"pm.collectionVariables.set(\"odata-version\", \"/v0.4\");"
+							"pm.collectionVariables.set(\"odata-version\", \"/v0.5\");"
 						]
 					}
 				},
