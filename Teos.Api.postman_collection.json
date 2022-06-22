@@ -2,7 +2,8 @@
 	"info": {
 		"_postman_id": "6b419a8a-4ea1-4fae-88ff-3d6a2e9fe4ee",
 		"name": "Teos.Api",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "4484909"
 	},
 	"item": [
 		{
@@ -11319,6 +11320,119 @@
 								}
 							},
 							"response": []
+						},
+						{
+							"name": "Invoices",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/invoices?$filter=UniqueAssetId in ('096d45a5c311f13c97fca0001') and Status ne 'Expired'&$count=true",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"invoices"
+									],
+									"query": [
+										{
+											"key": "$filter",
+											"value": "UniqueAssetId in ('096d45a5c311f13c97fca0001') and Status ne 'Expired'"
+										},
+										{
+											"key": "$count",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Process",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = pm.response.json();\r",
+											"\r",
+											"pm.test(\"Successful POST request\", function () {\r",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"senderAddress\": \"0x0972b2d2a189225e6bbe8680283e5c62c2309819\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/invoices({{invoiceId}})/process",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"invoices({{invoiceId}})",
+										"process"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Cancel",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = pm.response.json();\r",
+											"\r",
+											"pm.test(\"Successful POST request\", function () {\r",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"invoiceIds\": [\r\n        \"54A429BB-D16A-4FB5-F300-08DA53971746\"\r\n    ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/invoices/cancel",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"invoices",
+										"cancel"
+									]
+								}
+							},
+							"response": []
 						}
 					]
 				},
@@ -11399,14 +11513,18 @@
 		{
 			"name": "health details",
 			"request": {
+				"auth": {
+					"type": "noauth"
+				},
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{teos-url}}/health/details",
+					"raw": "{{teos-url}}/api/health/details",
 					"host": [
 						"{{teos-url}}"
 					],
 					"path": [
+						"api",
 						"health",
 						"details"
 					]
