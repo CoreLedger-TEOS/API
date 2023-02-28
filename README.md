@@ -1,6 +1,6 @@
 # CoreLedger TEOS API
 
-This repository contains the API documentation for CoreLedger TEOS. This guide explains how to import the collection to Postman from Github and how to get an API-Key from CoreLedger support to use with the API. Additionally, we will go over the prerequisites for running tests.
+This repository contains the API documentation for CoreLedger TEOS. This guide explains how to import the collection to Postman from Github and how to get an API-Key from CoreLedger support to use with the API. Additionally, we will go over the prerequisites for running requests.
 
 ## Importing the Collection to Postman
 
@@ -9,7 +9,7 @@ This repository contains the API documentation for CoreLedger TEOS. This guide e
 3. Select **Import From Folder** and navigate to the cloned repository folder.
 4. Make sure that `Teos.Api` collection and `TEOS API [PILOT]-Api-Key` environment  are selected and click on **Import** button.
 
-You should now have the collection imported into your Postman workspace.
+You should now have the collection and environment imported into your Postman workspace.
 
 ## Getting an API-Key
 
@@ -18,15 +18,17 @@ To use the CoreLedger TEOS API, you will need an API-Key. You can request an API
 1. Click on **Environments** tab in the left sidebar.
 2. Click on `TEOS API [PILOT]-Api-Key` environment.
 3. Change current value of **env.authToken** variable to your api key token.
-5. Save all the changes pressing **ctrl + s** combination or click save button in the top right corner of environment window.
+5. Save all the changes pressing **ctrl + s** combination or click **Save** button in the top right corner of environment window.
 
 You can now select the `TEOS API [PILOT]-Api-Key` environment when making requests to the CoreLedger TEOS API.
 
-## Prerequisites for Running Tests
+## Prerequisites for Running requests
 
-Before running tests, you will need to ensure that you use `TEOS API [PILOT]-Api-Key` environment:
+Before running requests, you will need to ensure that you use `TEOS API [PILOT]-Api-Key` environment:
 
-- Click on Environment dropdown in the top right corner of the screen and change current environment (**No Environment** by default) to `TEOS API [PILOT]-Api-Key`
+- Click on Environment dropdown in the top right corner of the screen and change current environment (**No Environment** by default) to `TEOS API [PILOT]-Api-Key`.
+
+And we are done, now you can use `Teos Api` Collection to explore our API.
 
 
 
