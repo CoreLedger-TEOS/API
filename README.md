@@ -1,6 +1,6 @@
 # CoreLedger TEOS API
 
-This repository contains the API documentation for CoreLedger TEOS. This guide explains how to import the collection to Postman from Github and how to get an API-Key from CoreLedger support to use with the API. Additionally, we will go over the prerequisites for running requests.
+This repository contains postman examples for CoreLedger TEOS API. This guide explains how to import the collection to Postman from Github and how to get an API-Key from CoreLedger support to use with the API. Additionally, we will go over the prerequisites for running requests.
 
 ## Importing the Collection to Postman
 
