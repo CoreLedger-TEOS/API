@@ -15,20 +15,17 @@ You should now have the collection and environment imported into your Postman wo
 
 To use the CoreLedger TEOS API, you will need an API-Key. You can request an API-Key by emailing support@coreledger.net. Once you have received your API-Key, you will need to add it to your Postman environment.
 
-1. Click on **Environments** tab in the left sidebar.
+1. Click on the **Environments** tab in the left sidebar.
 2. Click on `TEOS API [PILOT]-Api-Key` environment.
-3. Change current value of **env.authToken** variable to your api key token.
-5. Save all the changes pressing **ctrl + s** combination or click **Save** button in the top right corner of environment window.
+3. Change the current value of the **env.authToken** variable to your API key token.
+4. Save all the changes by pressing the **Ctrl + S** combination or clicking the **Save** button in the top right corner of the environment window.
 
 You can now select the `TEOS API [PILOT]-Api-Key` environment when making requests to the CoreLedger TEOS API.
 
-## Prerequisites for Running requests
+## Prerequisites for Running Requests
 
-Before running requests, you will need to ensure that you use `TEOS API [PILOT]-Api-Key` environment:
+Before running requests, you will need to ensure that you are using the `TEOS API [PILOT]-Api-Key` environment:
 
-- Click on Environment dropdown in the top right corner of the screen and change current environment (**No Environment** by default) to `TEOS API [PILOT]-Api-Key`.
+- Click on the Environment dropdown in the top right corner of the screen and change the current environment (**No Environment** by default) to `TEOS API [PILOT]-Api-Key`.
 
-And we are done, now you can use `Teos Api` Collection to explore our API.
-
-
-
+And we're done! Now you can use the `Teos Api` Collection to explore our API.
