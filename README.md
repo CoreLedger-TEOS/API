@@ -26,6 +26,6 @@ You can now select the `TEOS API [PILOT]-Api-Key` environment when making reques
 
 Before running requests, you will need to ensure that you are using the `TEOS API [PILOT]-Api-Key` environment:
 
-- Click on the Environment dropdown in the top right corner of the screen and change the current environment (**No Environment** by default) to `TEOS API [PILOT]-Api-Key`.
+- Click on the Environment dropdown in the top right corner of the screen and change the current environment (`No Environment` by default) to `TEOS API [PILOT]-Api-Key`.
 
 And we're done! Now you can use the `Teos Api` Collection to explore our API.
