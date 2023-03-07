@@ -6,7 +6,7 @@ This repository contains postman examples for CoreLedger TEOS API. This guide ex
 
 1. Clone the repository by running `git clone https://github.com/CoreLedger-TEOS/API.git` in your terminal or by downloading the repository as a ZIP file.
 2. Open Postman and click on the **Import** button in the top left corner.
-3. Select **Import From Folder** and navigate to the cloned repository folder.
+3. Select **Folder tab** and navigate to the cloned repository folder.
 4. Make sure that `Teos.Api` collection and `TEOS API [PILOT]-Api-Key` environment  are selected and click on **Import** button.
 
 You should now have the collection and environment imported into your Postman workspace.
