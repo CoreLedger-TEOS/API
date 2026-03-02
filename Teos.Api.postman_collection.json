@@ -13365,7 +13365,7 @@
 		"bearer": [
 			{
 				"key": "token",
-				"value": "{{env.teosapi-key}}",
+				"value": "{{env.authToken}}",
 				"type": "string"
 			}
 		]
